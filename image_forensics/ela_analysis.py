@@ -23,8 +23,8 @@ def compute_ela(image_path, quality=90, save_path=None):
     ela_image = Image.fromarray(ela_array)
 
     # 🔥 Save ELA image if path given
-    if save_path:
-        ela_image.save(save_path)
+    # if save_path:
+    #     ela_image.save(save_path)
 
     # Stats (unchanged)
     mean = np.mean(ela_array)
