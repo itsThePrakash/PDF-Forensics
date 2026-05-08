@@ -25,6 +25,37 @@ MIN_SIZE = 20
 os.makedirs(TAMPERED_DIR, exist_ok=True)
 labels = []
 
+if os.path.exists(LABEL_FILE):
+    with open(LABEL_FILE, "r", newline="", encoding="utf-8") as f:
+        reader = csv.reader(f)
+        next(reader, None)  # skip header
+        labels.extend(list(reader))
+
+# -------------------------------
+# LOAD EXISTING LABELS
+# -------------------------------
+def load_processed_files():
+    processed = set()
+
+    if not os.path.exists(LABEL_FILE):
+        return processed
+
+    try:
+        with open(LABEL_FILE, "r", newline="", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+
+            for row in reader:
+                pdf_name = row["pdf_name"]
+
+                # Genuine entries have label = 0
+                if row["label"] == "0":
+                    processed.add(pdf_name)
+
+    except Exception as e:
+        print(f"[LABEL LOAD ERROR] {e}")
+
+    return processed
+
 # -------------------------------
 # SAFE UTILS
 # -------------------------------
@@ -338,7 +369,15 @@ def tamper_internal_image_noise(input_path, output_path):
 # MAIN PIPELINE
 # =========================================================
 def process():
-    files = [f for f in os.listdir(GENUINE_DIR) if f.endswith(".pdf")]
+    processed_files = load_processed_files()
+
+    files = [
+        f for f in os.listdir(GENUINE_DIR)
+        if f.endswith(".pdf") and f not in processed_files
+    ]
+
+    print(f"[INFO] Found {len(processed_files)} already processed PDFs")
+    print(f"[INFO] Processing {len(files)} new PDFs")
 
     for file in files:
         input_path = os.path.join(GENUINE_DIR, file)
@@ -418,6 +457,9 @@ def process():
             applied = ["text_fallback"]
 
         final = os.path.join(TAMPERED_DIR, file.replace(".pdf", "_tampered.pdf"))
+        if os.path.exists(final):
+            print(f"[SKIP] Tampered file already exists for {file}")
+            continue
         os.rename(current, final)
 
         labels.append([os.path.basename(final), 1, "+".join(applied)])
