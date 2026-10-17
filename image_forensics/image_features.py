@@ -25,18 +25,17 @@ def extract_image_features(images_meta):
 
         print(f" → {i+1}/{len(images_meta)} [{img_type}, {source}]")
 
-        # ELA (still useful)
+        # ELA
         ela = compute_ela(
             path,
             save_path=f"ela_{path}.png"
         )
 
-        # 🔥 forensic components (replacing CNN)
+        # forensic components (replacing CNN)
         noise = noise_residual_score(path)
         jpeg  = jpeg_artifact_score(path)
         edge  = edge_inconsistency_score(path)
 
-        # type bias (your idea is good — keep it)
         type_bias = {
             "signature": 1.2,
             "stamp": 1.0,
